@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 import { startServer, setupServerShutdown } from './config/serverConfig.js';
 
 // Controllers  
-import { getApiDocumentation, healthCheck } from './controllers/rootController.js';
+import { getApiDocumentation, healthCheck, welcome } from './controllers/rootController.js';
 import { 
   securityHeaders,
   requestLogger, 
@@ -47,6 +47,7 @@ app.use('/static', express.static(path.join(__dirname, 'uploads')));
 // API ROUTES
 // ============================================================================
 
+app.get('/', welcome);                             // Welcome endpoint with COOL reference
 app.get('/health', healthCheck);                   // Health check endpoint
 app.get('/api', getApiDocumentation);              // API documentation  
 app.use('/images', imageRoutes);                   // Image upload/delete routes

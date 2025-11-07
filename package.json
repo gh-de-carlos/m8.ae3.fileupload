@@ -12,7 +12,10 @@
     "test:db": "node tests/database.test.js",
     "db:init": "node tests/database.test.js",
     "dev": "node --watch server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "stop": "node scripts/stop.js",
+    "restart": "node scripts/restart.js",
+    "status": "node scripts/status.js"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
