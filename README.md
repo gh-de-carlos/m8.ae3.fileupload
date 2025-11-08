@@ -1,10 +1,39 @@
-# M8.AE3 Subiendo imágenes con fileupload.
+# M8.AE3 Subiendo imágenes con multer.
 
 *Porque "entrete" nunca es malo, y siempre es bueno.*
 
 **Por:**   
-Carlos Pizarro Morales.   
-...(hay espacio para tí, oe!!)
+- Carlos Pizarro Morales.   
+...(hay espacio para tí, oe!!)   
+...(ya po. te decidiste??)
+
+## KATHYYYYY !!
+
+Si estás leyendo esto es porque no he terminado la documentación o los tests. En este momento el proyecto está funcional y supera ampliamente los requerimientos, aunque he tomado decisiones sobre algunos de los requisitos. Si quieres, me avisas y completo y/o pusheo lo que falte y lo podrás revisar en un rato o 1 día máx., o bien puedes testearlo tal como está. Insisto: está completo y funcional para lo que se pide:
+
+1. Sube imágenes
+2. Borra imágenes
+3. Permite usar `sharp` para modificarlas.
+
+## TOC
+
+- [**CONTEXTO**](#contexto)
+- [**INSTRUCCIONES**](#instrucciones) - Los requerimientos originales
+- [**NOTAS**](#notas) - Mis notas personales, *cómos, por qués*, etc.
+    - [**Introducción**](#introducción) - Overview, decisiones y patrones arquitectónicos
+    - [**Sobre el flujo de la aplicación**](#sobre-el-flujo-de-la-aplicación) - Endpoints principales
+    - [**Sobre el renombrado**](#sobre-el-renombrado) - Criterio de renombrado (distinto al sugerido)
+    - [**Sobre el uso de bd**](#sobre-el-uso-de-una-bd) - Una base de datos: por qué, para qué.
+    - [**Sobre las validaciones**](#sobre-las-validaciones) - Validaciones realizadas
+    - [**Sobre el uso de `sharp`**](#sobre-el-uso-de-sharp) - Cómo se ha utilizado.
+- [**FLUJO DE IMPLEMENTACIÓN**](#flujo-de-implementación) - El paso a paso general.
+    - [**Primera jornada**](#primera-jornada)
+    - [**Segunda jornada**](#segunda-jornada)
+- [**CÓMO UTILIZAR**](#cómo-utilizar) - Cómo instalar, utilizar y testear este proyecto.
+    - [**Instalación**](#instalar-e-iniciar-el-proyecto) - Instalar e iniciar el proyecto.
+    - [**Endpoints**](#endpoints-disponibles) - El listado de todos los endpoints disponibles como oneliners.
+    - [**Ejemplos**](#ejemplos-de-uso) - Ejemplos básicos de uso de los endpoints principales.
+
 
 ## Contexto
 
@@ -75,6 +104,16 @@ Estos atributos deben ser enviados al cliente en una respuesta JSON junto con el
 - Proporcione documentación y ejemplos de cómo utilizar la API de carga de archivos.
 
 ## Notas
+
+### Introducción
+
+Este ejercicio ha servido para incrementar en las buenas prácticas adquiridas hasta ahora. Se han realizado cambios en los requerimientos donde no tenían sentido o donde no están de acuerdo con los patrones aprendidos hasta ahora para el desarrollo de buenas APIs. Algunos detalles: 
+
+1. Se han implementado solo endpoints REST y asi `POST /uploads` y `DELETE /delete/:filename` se han transformado en `POST /images` y `DELETE /images/:filename` respectivamente. 
+2. Se ha implementado un renombrado más sofisticado haciendo uso de una base de datos para almancenar metadata. Esta decisión no se trata de hacer un *overkill* del proyecto, sino más bien de comenzar a practicar patrones de calidad en cualquier cosa por mínima que sea, si se da la ocasión.
+3. Tiene documentación exhaustiva del proceso de implementación y uso.
+4. Aun no tiene frontend (no se si me interesa por ahora).
+5. Utiliza patrones arquitectónicos como SRP, Dead Letter Queue [(DLQ)](https://aws.amazon.com/what-is/dead-letter-queue/), [Saga](https://learn.microsoft.com/en-us/azure/architecture/patterns/saga) Pattern, [Eventual Consistency](https://systemdesign.one/consistency-patterns/#eventual-consistency), [DAO](https://devcookies.medium.com/dao-design-pattern-the-complete-guide-f8246f227091), etc. y otros micropatrones para practicar código de calidad. No explico en detalle los patrones utilizados en este ejercicio porque sería muy largo y quedan como documentación personal.
 
 ### Sobre el flujo de la aplicación
 
@@ -149,13 +188,29 @@ Tabla para almacenar los borrados en estado inconsistente. Probablemente tendrá
 
 ### Sobre las validaciones
 
-No hay mucho que decir excepto: **no confies en el usuario, no confíes en el browser**. Leer más [**acá**](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
+Las validaciones son un poco más complejas de lo que propone el ejercicio, utilizando el paquete `mime-type` para descubrir el verdadero **MIME type** de cada archivo, y compararlo con lo declarado. Si estos no coinciden, el servidor responde *como los víoh* al intento malicioso:
+
+![screenshot1](./utils/docs/screenshot.1.png)
+
+Se ha intentado seguir el principio: **no confies en el usuario, no confíes en el browser** del que puedes leer más [**acá**](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html). Por lo demás, se han cubierto las otras validaciones sugeridas cuando no entran en conflicto con la implementación (no se validado que el nombre existe porque el sistema nunca utiliza el nombre original para nada internamente, solo como metadata)
 
 ### Sobre el uso de sharp
 
-TODO completar acá, idea: select con opt-in para modificar al subir.
+Los requisitos no indican bien cómo implementar la utilización de `sharp` así que se decidido lo siguiente:
 
-## Implementación
+1. Es un opt-in en `POST /images` a través de query params.
+2. Los parámetros disponibles son:
+    - `type` o `convert`: Convierte la imagen al formato elegido
+    - `size`: para modificar las dimensiones .Mira [endpoints disponibles](#endpoints-disponibles) por más detalles.
+    - `quality`: para configurar la calidad.
+3. Los parámetros tienen valores fijos o mínimos según el parámetro:
+    - `type` | `convert`: **Una entre** png, jpg, webp
+    - `size`: el mínimo aceptado es 200x200
+    - `quality`: el mínimo aceptado es 50
+
+## Flujo de implementación
+
+### Primera jornada
 
 ```bash
 # Crea el entorno
@@ -215,4 +270,207 @@ touch /routes/imageRoutes.js
 
 # Un juguete hermoso para reciclar..
 touch /utils/logger.js
+
+# Mejoras e integración logger+npm scripts
+mkdir /scripts
+touch /scripts/{restart.js, status.js, stop.js}
+
+# Se agregan entradas en package.json::scripts
+# Además me volví mono aprendiendo un poco sobre
+# otros scripts así que esta entrada ahora tiene:
+# prestart test test:db db:init dev start stop restart status
+```
+
+### Segunda jornada
+
+Actualmente me queda pendiente de implementar:   
+
+- POST /images - Ahora devuelve 501 "Not yet implemented"
+- DELETE /images/:filename - Retorna 501 "Not yet implemented"
+- Multer config y manejo de la subida de archivos
+- Validación de archivos (MIME type, size, extensions)
+- Verificación de la firma del archivo: ("¿Te creí hacker acaso?")
+- Generación del nombre (timestamp + UUID)
+- Operaciones transaccionales filesystem<>database. La parte más tricky y entrete.
+- Uso de `sharp` para transformar las imágenes.
+
+😅 Basicamente: toda la lógica importante...   
+
+Voy a seguir con la implementación de un projecto por capas, siguiendo el modelo **SRP** (Single Responsibility Principle) y un poco parecido a como lo maneja Java porque me parece mucho más limpio e intuitivo para entender qué hace cada parte comparado con los `controllers` aprendidos utilizando Express. No estoy seguro de que el actual sea un modelo "definitivo" con el que crear mis proyectos personales, pero es un ejercicio importante de exploración para mí.
+
+```bash
+# Parecido a Java Spring web projects
+mkdir services repositories
+
+# Como mi modelo de almacenamiento es transaccional
+# y un poco intrincado, separaré en distintos archivos
+# la lógica para ver los bugs con claridad. 
+
+# Helpers (services)
+cd services
+touch FileValidationService.js
+touch ImageTransformationService.js
+touch FileStorageService.js
+touch TransactionService.js
+
+# Repository (conexión con la bd)
+cd ../repositories
+touch ImageMetadataRepository.js
+touch CleanupQueueRepository.js
+
+# El controller más importante.
+cd ../controllers
+touch ImageController.js
+
+# La configuración de multer. Gemini sugiere
+# que esté en su propio directorio en vez de 
+# config, aduciendo que las configuraciones de
+# /config son más bien estáticas, mientras que
+# esta es una configuración de manejo de requests,
+# lo que lo hace un archivo "activo". Además, dice
+# que es un patrón común en Express.
+# Le haré caso mientras me familiarizo con los patrones.
+cd ..
+mkdir middleware
+touch middleware/multerConfig.js
+
+# Finalmente, algunas utilidades
+touch utils/fileUtils.js
+touch utils/validationUtils.js
+
+# Agrego archivos para que fnm funcione. También descubrí
+# que algunos sistemas automatizados de despliegue usan 
+# el package.json::engines, así que mejor aún.
+touch .nvmrc
+```
+
+## Cómo utilizar
+
+TODO terminar
+
+### Instalar e iniciar el proyecto
+
+```bash
+# Clona el proyecto y navega a su directorio.
+git clone []
+cd []
+
+# Instala las dependencias
+npm install
+
+# Crea la base de datos con usuario dedicado si lo tienes
+sudo -u postgres psql -c "CREATE DATABASE m8_img_server WITH OWNER=tu_usuario;"
+
+# o sin usuario dedicado (default postgres)
+sudo -u postgres psql -c "CREATE DATABASE m8_img_server;"
+
+# Inicia el proyecto.
+npm start
+```
+
+### Endpoints disponibles
+
+```bash
+# API Endpoints - Image Management  
+POST /images
+POST /images?convert=jpg
+POST /images?convert=png
+POST /images?convert=webp
+POST /images?resize=200x200
+POST /images?resize=200
+POST /images?resize=x200
+POST /images?quality=50
+POST /images?convert=jpg&resize=200x200
+POST /images?convert=png&quality=50
+POST /images?resize=200x200&quality=50
+POST /images?convert=webp&resize=200x200&quality=50
+
+# Image Listing (REST-compliant)
+GET /images
+GET /images?limit=1
+GET /images?offset=0  
+GET /images?limit=1&offset=0
+
+# Individual Image Operations
+GET /images/:filename
+DELETE /images/:filename
+
+# Statistics
+GET /images/stats/storage
+```
+
+### Ejemplos de uso
+
+```bash
+# Se supone que estás en el root y usarás la imagen en /tests/assets/
+curl http://localhost:3000/images -F "image=@tests/assets/img.1.png" | jq
+
+# O la img.3.jpg y la quieres convertir a webp
+curl http://localhost:3000/images?convert=webp -F "image=@tests/assets/img.3.png" | jq
+```
+
+**SAPEA:**  
+![captura_de_subida](./utils/docs/screenshot.2.png)
+
+Ahora, supongamos que quieres eliminar una imagen:
+
+```bash
+curl -X DELETE http://localhost:3000/[filename] | jq
+```
+
+**SAPEA:**  
+![captura_de_eliminado](./utils/docs/screenshot.3.png)
+
+Ahora, te las quieres dar de hacker y cambias la extensión de archivo de un script malicioso:
+
+```bash
+curl http://localhost:3000/images -F "image=@tests/assets/malicious.image.png.js;filename=malicious.me.png" | jq
+```
+
+**SAPEA:**  
+![captura_de_eliminado](./utils/docs/screenshot.1.png)
+
+
+
+
+
+
+
+ENDPOINTS para verificar
+
+```
+# OKAY
+# Modern syntax
+POST /images?convert=webp&resize=400x400&quality=85
+
+# Minimum valid dimensions
+POST /images?resize=200x200
+
+# Minimum valid quality  
+POST /images?quality=50
+
+# Combined real-world usage
+POST /images?convert=webp&resize=1200x800&quality=75
+
+# ERRORES
+# Too small dimensions
+POST /images?resize=150x150
+# → 400 "Dimensions too small for real-world usage. Minimum dimension: 200px"
+
+# Invalid format
+POST /images?convert=bmp  
+# → 400 "Invalid format. Allowed formats: jpg, png, webp"
+
+# Quality too low
+POST /images?quality=25
+# → 400 "Quality too low for real-world usage. Minimum quality: 50%"
+
+# Resize image
+curl -F "image=@photo.jpg" "http://localhost:3000/images?resize=800x600"
+
+# Convert format and adjust quality
+curl -F "image=@photo.jpg" "http://localhost:3000/images?convert=webp&quality=85"
+
+# Multiple transformations
+curl -F "image=@photo.jpg" "http://localhost:3000/images?resize=1200x800&convert=png&quality=95"
 ```

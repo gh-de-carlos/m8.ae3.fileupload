@@ -5,6 +5,7 @@ This directory contains test scripts for the M8.AE3 File Upload project.
 ## Available Tests
 
 ### `database.test.js`
+
 Tests database connectivity and initialization.
 
 **Purpose:**
@@ -13,8 +14,25 @@ Tests database connectivity and initialization.
 - Validate table creation and structure
 - Test basic query execution
 
+### `uploading.test.js`
+
+Tests image upload functionality through the complete API flow.
+
+**Purpose:**
+- Verify server connectivity and availability
+- Test image upload with multipart form data
+- Validate server response format and content
+- Check uploaded file accessibility
+- Provide detailed logging for debugging
+
 **Usage:**
 ```bash
+# Run upload tests
+npm run test:upload
+
+# Or run directly
+node tests/uploading.test.js
+
 # Run database tests
 npm test
 npm run test:db
@@ -25,6 +43,17 @@ node tests/database.test.js
 ```
 
 **Requirements:**
+- Server running on http://localhost:3000 (start with: `node server.js`)
+- PostgreSQL database properly configured and accessible
+- Test image available in `tests/assets/` directory
+- `curl` command available in system PATH
+
+**Test Assets:**
+- `tests/assets/img.1.png` (or img.1.jpg) - Primary test image
+- `tests/assets/img.2.jpg` - Secondary test image  
+- `tests/assets/malicious.image.png.js` - Security testing file
+
+**Database Test Requirements:**
 - PostgreSQL server running
 - Valid `.env` file with database credentials
 - Database `m8_img_server` exists

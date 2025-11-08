@@ -1,15 +1,24 @@
 {
-  "name": "m8.ae3.fileupload",
+  "name": "m8.ae3.img.server",
   "version": "1.0.0",
   "description": "A small utility to upload your images connecting a database for metadata.",
   "license": "ISC",
   "author": "Carlos Pizarro Morales",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gh-de-carlos/m8.ae3.img.server.git"
+  },
   "type": "module",
   "main": "server.js",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "prestart": "echo 'Noh juimoh 😁🫰...'",
     "test": "node tests/database.test.js",
     "test:db": "node tests/database.test.js",
+    "test:upload": "node tests/uploading.test.js",
     "db:init": "node tests/database.test.js",
     "dev": "node --watch server.js",
     "start": "node server.js",
