@@ -4,16 +4,7 @@
 
 **Por:**   
 - Carlos Pizarro Morales.   
-...(hay espacio para tí, oe!!)   
-...(ya po. te decidiste??)
-
-## KATHYYYYY !!
-
-Si estás leyendo esto es porque no he terminado la documentación o los tests. En este momento el proyecto está funcional y supera ampliamente los requerimientos, aunque he tomado decisiones sobre algunos de los requisitos. Si quieres, me avisas y completo y/o pusheo lo que falte y lo podrás revisar en un rato o 1 día máx., o bien puedes testearlo tal como está. Insisto: está completo y funcional para lo que se pide:
-
-1. Sube imágenes
-2. Borra imágenes
-3. Permite usar `sharp` para modificarlas.
+- Sebastián Gallegos Frías.
 
 ## TOC
 
@@ -114,6 +105,7 @@ Este ejercicio ha servido para incrementar en las buenas prácticas adquiridas h
 3. Tiene documentación exhaustiva del proceso de implementación y uso.
 4. Aun no tiene frontend (no se si me interesa por ahora).
 5. Utiliza patrones arquitectónicos como SRP, Dead Letter Queue [(DLQ)](https://aws.amazon.com/what-is/dead-letter-queue/), [Saga](https://learn.microsoft.com/en-us/azure/architecture/patterns/saga) Pattern, [Eventual Consistency](https://systemdesign.one/consistency-patterns/#eventual-consistency), [DAO](https://devcookies.medium.com/dao-design-pattern-the-complete-guide-f8246f227091), etc. y otros micropatrones para practicar código de calidad. No explico en detalle los patrones utilizados en este ejercicio porque sería muy largo y quedan como documentación personal.
+6. Si bien el ejercicio menciona que se deben manejar otros tipos de archivos, en realidad se encontró más interesante el escenario de manejar solo archivos de imagen para probar cosas entretenidas como aplicar transformaciones con `sharp` por ejemplo.
 
 ### Sobre el flujo de la aplicación
 
@@ -456,10 +448,29 @@ curl http://localhost:3000/images -F "image=@tests/assets/img.4.png" | jq
 **RESULTADO:**  
 ![captura_de_subida](./utils/docs/screenshot.4.png)
 
+-----
 
+#### Obtener información de una imagen
 
+```bash
+curl http://localhost:3000/images/[filename] | jq
+```
 
+**RESULTADO:**
+![captura_de_metadata](./utils/docs/screenshot.5.png)
 
+-----
+
+#### Obtener lista de todas las imágenes subidas
+
+```bash
+curl http://localhost:3000/images | jq
+```
+
+**RESULTADO:**
+![captura_de_lista](./utils/docs/screenshot.6.png)
+
+-----
 
 ENDPOINTS para verificar
 

@@ -22,6 +22,12 @@ const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Platform specific null device
+const isWindows = process.platform === 'win32';
+const nullDevice = isWindows ? 'NUL' : '/dev/null';
+
+log.info(`Platform detected: ${process.platform} (using ${nullDevice} for output redirection)`);
+
 const testImageUpload = async () => {
   log.info('Testing image upload functionality...\n');
 
@@ -54,7 +60,7 @@ const testImageUpload = async () => {
     // 2. Check server availability
     log.test('2. Testing server connectivity...');
     try {
-      const { stdout: pingResult } = await execAsync(`curl -s -o /dev/null -w "%{http_code}" ${serverUrl.replace('/images', '/health')}`);
+      const { stdout: pingResult } = await execAsync(`curl -s -o ${nullDevice} -w "%{http_code}" ${serverUrl.replace('/images', '/health')}`);
       if (pingResult.trim() !== '200') {
         throw new Error(`Server not responding correctly (HTTP ${pingResult.trim()})`);
       }
@@ -105,7 +111,7 @@ const testImageUpload = async () => {
     log.test('6. Testing uploaded file accessibility...');
     try {
       const fileUrl = `http://localhost:3000${response.data.url}`;
-      const { stdout: fileCheck } = await execAsync(`curl -s -o /dev/null -w "%{http_code}" "${fileUrl}"`);
+      const { stdout: fileCheck } = await execAsync(`curl -s -o ${nullDevice} -w "%{http_code}" "${fileUrl}"`);
       
       if (fileCheck.trim() === '200') {
         log.pass('Uploaded file is accessible');
