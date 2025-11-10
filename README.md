@@ -346,14 +346,16 @@ touch config/constants/index.js
 
 ## Cómo utilizar
 
-TODO terminar
+Esta sección explica cómo instalar, iniciar y utilizar este proyecto, para ello el primer requisito es tener instalado Node.js y PostgreSQL en tu sistema.
+
+> **Tip:** Instala [`jq`](https://jqlang.org) para ver las respuestas JSON formateadas de forma más legible y _esplendida_ en la terminal. Si prefieres no usarlo, simplemente omite `| jq` de los comandos curl de ejemplo.
 
 ### Instalar e iniciar el proyecto
 
 ```bash
 # Clona el proyecto y navega a su directorio.
-git clone []
-cd []
+git clone https://github.com/gh-de-carlos/m8.ae3.img.server
+cd m8.ae3.img.server
 
 # Instala las dependencias
 npm install
@@ -364,9 +366,40 @@ sudo -u postgres psql -c "CREATE DATABASE m8_img_server WITH OWNER=tu_usuario;"
 # o sin usuario dedicado (default postgres)
 sudo -u postgres psql -c "CREATE DATABASE m8_img_server;"
 
-# Inicia el proyecto.
+# Configura las variables de entorno en un archivo .env con tus credenciales
+cp .env.example .env
+
+# Inicia el proyecto en modo producción
 npm start
+
+# O en modo desarrollo (con reinicio automático del servidor)
+npm run dev
 ```
+
+### Realizar peticiones
+
+Una vez encendido el servidor, puedes realizar peticiones a los endpoints disponibles utilizando herramientas como `curl`, `Postman` o cualquier cliente HTTP de tu preferencia. Para el siguiente ejemplo, se utilizará `curl` para subir una imagen:
+
+```bash
+curl http://localhost:3000/images -F "image=@ruta/a/tu/imagen.jpg" | jq
+```
+
+- `-F` indica que se está enviando un formulario con un archivo (`multipart/form-data`).
+- `"image=@ruta/a/tu/imagen.jpg"` especifica el campo del formulario y la ruta al archivo que deseas subir.
+
+A partir de acá puedes realizar peticiones para cargar una imagen y convertirlo a otro formato:
+
+```bash
+curl http://localhost:3000/images?convert=webp -F "image=@ruta/a/tu/imagen.jpg" | jq
+```
+
+O si quieres redimensionar la imagen:
+
+```bash
+curl http://localhost:3000/images?resize=200x200 -F "image=@ruta/a/tu/imagen.jpg" | jq
+```
+
+O más peticiones, para ello revisa la sección siguiente que indica los endpoints disponibles.
 
 ### Endpoints disponibles
 
